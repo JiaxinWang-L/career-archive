@@ -1,0 +1,18 @@
+{
+  "envId": "career-archive-d6g3v2mm182ce6b11",
+  "functionRoot": "./cloudfunctions",
+  "functions": [
+    {
+      "name": "api",
+      "dir": "./cloudfunctions/api",
+      "runtime": "Nodejs18.15",
+      "timeout": 20,
+      "envVariables": {
+        "INVITE_CODE": "CAREER2026",
+        "MEMBER_LIMIT": "5",
+        "APP_STATE_ID": "career-archive",
+        "APP_STATE_COLLECTION": "app_state"
+      }
+    }
+  ]
+}
