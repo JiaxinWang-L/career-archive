@@ -197,7 +197,7 @@ function renderAuth() {
           </div>
           <div class="field">
             <label for="email">邮箱</label>
-            <input id="email" name="email" type="email" autocomplete="email" required placeholder="admin@example.com" />
+            <input id="email" name="email" type="email" autocomplete="email" required placeholder="请输入邮箱" />
           </div>
           <div class="field">
             <label for="password">密码</label>
@@ -213,11 +213,11 @@ function renderAuth() {
                 </div>
                 <div class="field">
                   <label for="invite">邀请码</label>
-                  <input id="invite" name="invite" required placeholder="CAREER2026" />
+                  <input id="invite" name="invite" required placeholder="请向管理员获取邀请码" />
                 </div>
               `
           }
-          <div class="notice">演示管理员账号：admin@example.com / 123456。邀请码：CAREER2026。当前成员名额 ${invitedMemberCount()} / ${MEMBER_LIMIT}。</div>
+          <div class="notice">${isLogin ? "请使用你的账号登录。" : "注册需要邀请码，请向管理员获取。"}</div>
           ${state.serverError ? `<div class="message error">${escapeHtml(state.serverError)}</div>` : ""}
           <button class="primary-button" type="submit">${isLogin ? "登录" : "创建账号"}</button>
           <div id="authMessage"></div>
