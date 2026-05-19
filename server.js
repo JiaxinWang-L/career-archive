@@ -134,20 +134,20 @@ function writeDbLocal(db) {
 }
 
 async function readDb() {
-  if (!usingSupabase()) return readDbLocal();
+  if (!usingSupabase()) return normalizeDb(readDbLocal());
 
   const rows = await supabaseRequest(
     `app_state?id=eq.${encodeURIComponent(SUPABASE_APP_STATE_ID)}&select=data`,
   );
 
-  if (rows.length) return rows[0].data;
+  if (rows.length) return normalizeDb(rows[0].data);
 
   await supabaseRequest("app_state", {
     method: "POST",
     body: JSON.stringify({ id: SUPABASE_APP_STATE_ID, data: seedDb }),
   });
 
-  return seedDb;
+  return normalizeDb(seedDb);
 }
 
 async function writeDb(db) {
@@ -191,6 +191,16 @@ function getSettings(db) {
     allowRegistration: true,
   };
   return db.settings;
+}
+
+function normalizeDb(raw) {
+  const db = raw?.users && raw?.records ? raw : raw?.data || seedDb;
+
+  db.users = Array.isArray(db.users) ? db.users : [];
+  db.records = Array.isArray(db.records) ? db.records : [];
+  getSettings(db);
+
+  return db;
 }
 
 function sendJson(res, status, data) {

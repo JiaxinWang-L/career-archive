@@ -105,11 +105,21 @@ function getSettings(data) {
   return data.settings;
 }
 
+function normalizeData(raw) {
+  const data = raw?.users && raw?.records ? raw : raw?.data || seedDb;
+
+  data.users = Array.isArray(data.users) ? data.users : [];
+  data.records = Array.isArray(data.records) ? data.records : [];
+  getSettings(data);
+
+  return data;
+}
+
 async function readData() {
   const result = await appState.doc(APP_STATE_ID).get();
   const doc = result.data?.[0];
 
-  if (doc?.data) return doc.data;
+  if (doc?.data) return normalizeData(doc.data);
 
   await appState.doc(APP_STATE_ID).set({
     data: {
@@ -118,7 +128,7 @@ async function readData() {
     },
   });
 
-  return seedDb;
+  return normalizeData(seedDb);
 }
 
 async function writeData(data) {

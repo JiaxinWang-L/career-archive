@@ -1,7 +1,9 @@
 const SESSION_KEY = "career-archive-current-user";
 const INVITE_CODE = "CAREER2026";
 const MEMBER_LIMIT = 5;
-const API_BASE = (window.CAREER_ARCHIVE_CONFIG?.apiBase || "").replace(/\/$/, "");
+const DEFAULT_API_BASE =
+  "https://career-archive-d6g3v2mm182ce6b11-1394551417.ap-shanghai.app.tcloudbase.com";
+const API_BASE = (window.CAREER_ARCHIVE_CONFIG?.apiBase || DEFAULT_API_BASE).replace(/\/$/, "");
 
 function apiUrl(path) {
   return `${API_BASE}${path}`;
