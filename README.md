@@ -11,16 +11,7 @@
 代码托管：GitHub
 ```
 
-当前 CloudBase 环境：
 
-```text
-career-archive-d6g3v2mm182ce6b11
-```
-
-后端 API 域名：
-
-```text
-https://career-archive-d6g3v2mm182ce6b11-1394551417.ap-shanghai.app.tcloudbase.com
 ```
 
 前端访问地址：
@@ -44,53 +35,10 @@ https://career-archive-d6g3v2mm182ce6b11-1394551417.tcloudbaseapp.com/career-arc
 - 私密 / 小圈子共享
 - 图片单独共享
 
-## 默认账号
 
-管理员账号：
-
-```text
-admin@example.com
-123456
-```
-
-默认邀请码：
-
-```text
-CAREER2026
-```
-
-上线后建议第一时间进入「管理后台」修改邀请码。
 
 ## 数据在哪里
 
-公网版本的数据存在 CloudBase 文档型数据库：
-
-```text
-集合：app_state
-文档 ID：career-archive
-字段：data
-```
-
-`data` 里包含：
-
-- settings：邀请码、成员名额、注册开关
-- users：用户列表
-- records：求职记录、面试轮次、面试问题、图片附件
-
-当前版本为了快速上线，图片会以 base64 文本保存在数据库 JSON 里。少量图片可以使用；如果图片变多，后续应该迁移到 CloudBase 云存储。
-
-## 本地文件说明
-
-```text
-index.html                 页面入口
-styles.css                 页面样式
-app.js                     前端交互逻辑
-config.js                  云函数 API 地址配置
-cloudfunctions/api/index.js CloudBase 云函数后端
-cloudfunctions/api/package.json 云函数依赖
-cloudbaserc.json           CloudBase 环境配置
-CLOUDBASE_DEPLOY.md        手动部署步骤
-```
 
 ## 日常修改流程
 
@@ -116,72 +64,8 @@ config.js
 cloudfunctions/api/index.js
 ```
 
-## 手动部署前端
 
-如果不用 GitHub 自动部署，也可以手动上传。
 
-前端文件：
-
-```text
-index.html
-styles.css
-app.js
-config.js
-```
-
-部署到 CloudBase 静态网站托管时：
-
-```text
-项目框架：其他
-目标目录：./
-安装命令：空
-构建命令：空
-构建产物目录：./
-部署路径：/
-```
-
-如果使用当前控制台的部署路径 `/career-archive`，访问地址会是：
-
-```text
-https://career-archive-d6g3v2mm182ce6b11-1394551417.tcloudbaseapp.com/career-archive/index.html
-```
-
-## 手动部署云函数
-
-云函数源码在：
-
-```text
-cloudfunctions/api
-```
-
-如果需要手动上传，先打包：
-
-```powershell
-Compress-Archive -Path .\cloudfunctions\api\index.js,.\cloudfunctions\api\package.json -DestinationPath .\cloudfunctions\api.zip -Force
-```
-
-然后在 CloudBase 云函数 `api` 页面上传 `api.zip`。
-
-云函数配置：
-
-```text
-函数类型：普通函数
-运行环境：Nodejs 18.15
-执行方法：index.main
-执行超时时间：20 秒
-自动安装依赖：开启
-```
-
-环境变量：
-
-```text
-INVITE_CODE=CAREER2026
-MEMBER_LIMIT=5
-APP_STATE_ID=career-archive
-APP_STATE_COLLECTION=app_state
-```
-
-这些环境变量主要用于首次初始化。初始化后，邀请码和名额可以在管理员后台修改。
 
 ## 隐私规则
 
@@ -212,25 +96,7 @@ window.CAREER_ARCHIVE_CONFIG = {
 
 注意引号必须是英文直引号 `" "`，不能是中文弯引号 `“ ”`。
 
-### 后端接口是否正常
 
-打开：
-
-```text
-https://career-archive-d6g3v2mm182ce6b11-1394551417.ap-shanghai.app.tcloudbase.com/api/state
-```
-
-如果看到 JSON，说明后端接口正常。
-
-### 前端改了但网页没变化
-
-先强制刷新：
-
-```text
-Ctrl + F5
-```
-
-如果还是没变化，确认是否已经把修改推送到 GitHub，或者是否已经重新部署 CloudBase 静态网站。
 
 ## 后续建议
 
