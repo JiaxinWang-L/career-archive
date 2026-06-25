@@ -157,17 +157,17 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "GET" && path === "/api/health") {
+  if (req.method === "GET" && (path === "/" || path === "/health" || path === "/api/health")) {
     send(res, 200, { ok: true, service: "career-archive-backend" });
     return;
   }
 
-  if (req.method === "GET" && path === "/api/state") {
+  if (req.method === "GET" && (path === "/state" || path === "/api/state")) {
     send(res, 200, publicState(await readData()));
     return;
   }
 
-  if (req.method === "POST" && path === "/api/login") {
+  if (req.method === "POST" && (path === "/login" || path === "/api/login")) {
     const body = await readBody(req);
     const data = await readData();
     const email = String(body.email || "").trim().toLowerCase();
@@ -183,7 +183,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "POST" && path === "/api/register") {
+  if (req.method === "POST" && (path === "/register" || path === "/api/register")) {
     const body = await readBody(req);
     const data = await readData();
     const settings = getSettings(data);
@@ -228,7 +228,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "PUT" && path === "/api/state") {
+  if (req.method === "PUT" && (path === "/state" || path === "/api/state")) {
     const body = await readBody(req);
     const data = await readData();
     const userId = String(body.currentUserId || "");
@@ -249,7 +249,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "PUT" && path === "/api/admin/settings") {
+  if (req.method === "PUT" && (path === "/admin/settings" || path === "/api/admin/settings")) {
     const body = await readBody(req);
     const result = await requireAdmin(body);
     if (result.error) {
@@ -268,7 +268,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "POST" && path === "/api/admin/delete-member") {
+  if (req.method === "POST" && (path === "/admin/delete-member" || path === "/api/admin/delete-member")) {
     const body = await readBody(req);
     const result = await requireAdmin(body);
     if (result.error) {
@@ -295,7 +295,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "POST" && path === "/api/admin/delete-record") {
+  if (req.method === "POST" && (path === "/admin/delete-record" || path === "/api/admin/delete-record")) {
     const body = await readBody(req);
     const result = await requireAdmin(body);
     if (result.error) {
