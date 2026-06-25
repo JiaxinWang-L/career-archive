@@ -92,6 +92,37 @@ function errorInfo(error) {
   };
 }
 
+function envValue(...names) {
+  for (const name of names) {
+    const value = String(process.env[name] || "").trim();
+    if (value) return value;
+  }
+
+  return "";
+}
+
+function getCredentialConfig() {
+  const secretId = envValue("TENCENTCLOUD_SECRETID", "TENCENTCLOUD_SECRET_ID", "TCB_SECRET_ID", "SECRET_ID");
+  const secretKey = envValue("TENCENTCLOUD_SECRETKEY", "TENCENTCLOUD_SECRET_KEY", "TCB_SECRET_KEY", "SECRET_KEY");
+  const sessionToken = envValue("TENCENTCLOUD_SESSIONTOKEN", "TENCENTCLOUD_SESSION_TOKEN", "TCB_SESSION_TOKEN");
+
+  if (!secretId || !secretKey) return {};
+
+  return {
+    secretId,
+    secretKey,
+    ...(sessionToken ? { sessionToken } : {}),
+  };
+}
+
+function credentialDebugInfo() {
+  return {
+    hasSecretId: Boolean(envValue("TENCENTCLOUD_SECRETID", "TENCENTCLOUD_SECRET_ID", "TCB_SECRET_ID", "SECRET_ID")),
+    hasSecretKey: Boolean(envValue("TENCENTCLOUD_SECRETKEY", "TENCENTCLOUD_SECRET_KEY", "TCB_SECRET_KEY", "SECRET_KEY")),
+    hasSessionToken: Boolean(envValue("TENCENTCLOUD_SESSIONTOKEN", "TENCENTCLOUD_SESSION_TOKEN", "TCB_SESSION_TOKEN")),
+  };
+}
+
 function withTimeout(promise, label) {
   let timer;
   const timeout = new Promise((_, reject) => {
@@ -108,7 +139,10 @@ function withTimeout(promise, label) {
 function getAppState() {
   if (!appState) {
     const cloudbase = require("@cloudbase/node-sdk");
-    const app = cloudbase.init({ env: ENV_ID });
+    const app = cloudbase.init({
+      env: ENV_ID,
+      ...getCredentialConfig(),
+    });
     const db = app.database();
     appState = db.collection(COLLECTION);
   }
@@ -235,6 +269,7 @@ async function handleApi(req, res) {
       dbTimeoutMs: DB_TIMEOUT_MS,
       hasTcbEnv: Boolean(process.env.TCB_ENV),
       hasScfNamespace: Boolean(process.env.SCF_NAMESPACE),
+      ...credentialDebugInfo(),
     });
     return;
   }

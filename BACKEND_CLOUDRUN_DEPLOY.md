@@ -65,6 +65,19 @@ MEMBER_LIMIT=8
 - `APP_STATE_ID` 和 `APP_STATE_COLLECTION` 指向现有数据库，不会迁移或清空数据。
 - 邀请码和成员名额只是初始化默认值，之后以管理后台保存到数据库里的设置为准。
 
+如果 `/api/db-check` 返回 `SIGN_PARAM_INVALID` 或 `secret id error`，说明云托管后端没有拿到有效的腾讯云 API 密钥。需要在云托管环境变量里继续添加：
+
+```text
+TENCENTCLOUD_SECRETID=你的 SecretId
+TENCENTCLOUD_SECRETKEY=你的 SecretKey
+```
+
+注意：
+
+- 这两个值只能放在 CloudBase 云托管环境变量里。
+- 不要写进 `config.js`、`app.js`、GitHub、README 或任何前端文件。
+- 配好后重新部署云托管，再打开 `/api/debug`，确认 `hasSecretId` 和 `hasSecretKey` 都是 `true`。
+
 ## 3. 验证后端
 
 部署成功后，CloudBase 会给一个云托管访问域名。
