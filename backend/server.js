@@ -7,8 +7,17 @@ const MEMBER_LIMIT = Number(process.env.MEMBER_LIMIT || 8);
 const APP_STATE_ID = process.env.APP_STATE_ID || "career-archive";
 const COLLECTION = process.env.APP_STATE_COLLECTION || "app_state";
 const ENV_ID = process.env.TCB_ENV || process.env.SCF_NAMESPACE || "career-archive-d6g3v2mm182ce6b11";
+const DB_TIMEOUT_MS = Number(process.env.DB_TIMEOUT_MS || 6000);
 
 let appState;
+
+process.on("uncaughtException", (error) => {
+  console.error("uncaught exception", error);
+});
+
+process.on("unhandledRejection", (error) => {
+  console.error("unhandled rejection", error);
+});
 
 const seedDb = {
   settings: {
@@ -83,6 +92,19 @@ function errorInfo(error) {
   };
 }
 
+function withTimeout(promise, label) {
+  let timer;
+  const timeout = new Promise((_, reject) => {
+    timer = setTimeout(() => {
+      const error = new Error(`${label} 超时，请检查云托管是否有权限访问 CloudBase 文档型数据库。`);
+      error.code = "DB_TIMEOUT";
+      reject(error);
+    }, DB_TIMEOUT_MS);
+  });
+
+  return Promise.race([promise, timeout]).finally(() => clearTimeout(timer));
+}
+
 function getAppState() {
   if (!appState) {
     const cloudbase = require("@cloudbase/node-sdk");
@@ -96,29 +118,38 @@ function getAppState() {
 
 async function readData() {
   const collection = getAppState();
-  const result = await collection.doc(APP_STATE_ID).get();
+  const result = await withTimeout(
+    collection.doc(APP_STATE_ID).get(),
+    `读取 ${COLLECTION}/${APP_STATE_ID}`
+  );
   const doc = result.data?.[0];
 
   if (doc?.data) return normalizeData(doc.data);
 
-  await collection.doc(APP_STATE_ID).set({
-    data: {
-      data: seedDb,
-      updatedAt: new Date(),
-    },
-  });
+  await withTimeout(
+    collection.doc(APP_STATE_ID).set({
+      data: {
+        data: seedDb,
+        updatedAt: new Date(),
+      },
+    }),
+    `初始化 ${COLLECTION}/${APP_STATE_ID}`
+  );
 
   return normalizeData(seedDb);
 }
 
 async function writeData(data) {
   const collection = getAppState();
-  await collection.doc(APP_STATE_ID).set({
-    data: {
-      data,
-      updatedAt: new Date(),
-    },
-  });
+  await withTimeout(
+    collection.doc(APP_STATE_ID).set({
+      data: {
+        data,
+        updatedAt: new Date(),
+      },
+    }),
+    `保存 ${COLLECTION}/${APP_STATE_ID}`
+  );
 }
 
 function send(res, statusCode, data) {
@@ -201,6 +232,7 @@ async function handleApi(req, res) {
       appStateId: APP_STATE_ID,
       nodeEnv: process.env.NODE_ENV || "",
       port: PORT,
+      dbTimeoutMs: DB_TIMEOUT_MS,
       hasTcbEnv: Boolean(process.env.TCB_ENV),
       hasScfNamespace: Boolean(process.env.SCF_NAMESPACE),
     });
