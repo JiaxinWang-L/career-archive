@@ -1,6 +1,6 @@
 const SESSION_KEY = "career-archive-current-user";
-const INVITE_CODE = "CAREER2026";
-const MEMBER_LIMIT = 5;
+const INVITE_CODE = "";
+const MEMBER_LIMIT = 0;
 const DEFAULT_API_BASE =
   "https://career-archive-d6g3v2mm182ce6b11-1394551417.ap-shanghai.app.tcloudbase.com";
 const API_BASE = (window.CAREER_ARCHIVE_CONFIG?.apiBase || DEFAULT_API_BASE).replace(/\/$/, "");
@@ -22,54 +22,8 @@ const seedState = {
     memberLimit: MEMBER_LIMIT,
     allowRegistration: true,
   },
-  users: [
-    {
-      id: "u-admin",
-      name: "管理员",
-      email: "admin@example.com",
-      password: "123456",
-      role: "admin",
-      createdAt: new Date().toISOString(),
-    },
-  ],
-  records: [
-    {
-      id: "r-demo",
-      ownerId: "u-admin",
-      company: "示例科技",
-      position: "产品运营实习生",
-      channel: "Boss 直聘",
-      appliedAt: "2026-05-18",
-      status: "面试中",
-      visibility: "shared",
-      shareImages: false,
-      note:
-        "这是一条示例记录。你可以保留它作为模板，也可以删除后从自己的第一家公司开始记录。",
-      images: [],
-      rounds: [
-        {
-          id: "round-demo",
-          name: "一面",
-          date: "2026-05-18",
-          format: "视频面试",
-          result: "待反馈",
-          summary: "问题集中在项目经历和岗位理解，需要把回答整理得更贴近 JD。",
-          questions: [
-            {
-              id: "q-demo-1",
-              type: "项目经历",
-              content: "请介绍一个你最有代表性的项目。",
-              answer: "按项目背景、目标、行动、结果的顺序回答。",
-              review: "结果指标讲得不够具体，下次补充数据和个人贡献。",
-              betterAnswer:
-                "用 STAR 法则组织，并把和岗位相关的能力放在前半段突出。",
-              images: [],
-            },
-          ],
-        },
-      ],
-    },
-  ],
+  users: [],
+  records: [],
 };
 
 let state = loadState();
@@ -184,7 +138,7 @@ function renderAuth() {
             <div class="brand-mark">职</div>
             <div>
               <h1>求职成长档案</h1>
-              <p>邀请制求职经验库，先给 5 位成员小范围使用。</p>
+              <p>邀请制求职经验库，面向小范围成员使用。</p>
             </div>
           </div>
           <ul>
@@ -204,7 +158,7 @@ function renderAuth() {
           </div>
           <div class="field">
             <label for="password">密码</label>
-            <input id="password" name="password" type="password" autocomplete="${isLogin ? "current-password" : "new-password"}" required placeholder="123456" />
+            <input id="password" name="password" type="password" autocomplete="${isLogin ? "current-password" : "new-password"}" required placeholder="请输入密码" />
           </div>
           ${
             isLogin
@@ -215,12 +169,12 @@ function renderAuth() {
                   <input id="name" name="name" required placeholder="你的名字" />
                 </div>
                 <div class="field">
-                  <label for="invite">邀请码</label>
-                  <input id="invite" name="invite" required placeholder="请向管理员获取邀请码" />
+                  <label for="invite">加入凭证</label>
+                  <input id="invite" name="invite" required placeholder="请输入管理员提供的凭证" />
                 </div>
               `
           }
-          <div class="notice">${isLogin ? "请使用你的账号登录。" : "注册需要邀请码，请向管理员获取。"}</div>
+          <div class="notice">${isLogin ? "请使用已注册账号登录。" : "请填写注册信息。"}</div>
           ${state.serverError ? `<div class="message error">${escapeHtml(state.serverError)}</div>` : ""}
           <button class="primary-button" type="submit">${isLogin ? "登录" : "创建账号"}</button>
           <div id="authMessage"></div>
