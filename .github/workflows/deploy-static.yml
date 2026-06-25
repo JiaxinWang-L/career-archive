@@ -34,5 +34,7 @@ jobs:
         env:
           TENCENTCLOUD_SECRETID: ${{ secrets.TENCENTCLOUD_SECRETID }}
           TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENTCLOUD_SECRETKEY }}
+          SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRETID }}
+          SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRETKEY }}
         run: |
-          npx --yes @cloudbase/cli@latest hosting deploy ./public-dist -e career-archive-d6g3v2mm182ce6b11
+          npx --yes -p @cloudbase/cli@latest tcb hosting deploy ./public-dist / -e career-archive-d6g3v2mm182ce6b11
