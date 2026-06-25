@@ -6,6 +6,9 @@ const DEFAULT_API_BASE =
 const API_BASE = (window.CAREER_ARCHIVE_CONFIG?.apiBase || DEFAULT_API_BASE).replace(/\/$/, "");
 
 function apiUrl(path) {
+  if (API_BASE.includes(".run.tcloudbase.com")) {
+    return `${API_BASE}/?apiPath=${encodeURIComponent(path)}`;
+  }
   return `${API_BASE}${path}`;
 }
 

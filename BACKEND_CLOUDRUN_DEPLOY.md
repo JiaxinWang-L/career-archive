@@ -68,10 +68,10 @@ MEMBER_LIMIT=8
 
 部署成功后，CloudBase 会给一个云托管访问域名。
 
-先打开：
+先打开根地址：
 
 ```text
-https://你的云托管域名/api/health
+https://你的云托管域名/
 ```
 
 看到：
@@ -80,10 +80,10 @@ https://你的云托管域名/api/health
 {"ok":true,"service":"career-archive-backend"}
 ```
 
-再打开：
+如果根地址可以打开，但 `/api/state` 显示 CloudBase 的 `INVALID_PATH`、`502` 或 `503`，这是云托管默认域名的路由限制。当前代码已经兼容这种情况，改用下面这个验证地址：
 
 ```text
-https://你的云托管域名/api/state
+https://你的云托管域名/?apiPath=%2Fapi%2Fstate
 ```
 
 应该返回包含 `users`、`records`、`settings` 的 JSON。

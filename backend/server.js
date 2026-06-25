@@ -150,7 +150,7 @@ async function requireAdmin(body) {
 
 async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  const path = url.pathname;
+  const path = url.searchParams.get("apiPath") || url.pathname;
 
   if (req.method === "OPTIONS") {
     send(res, 204, {});

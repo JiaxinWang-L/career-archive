@@ -259,13 +259,14 @@ function serveStatic(req, res) {
 
 async function handleApi(req, res) {
   const url = new URL(req.url, `http://${req.headers.host}`);
+  const pathname = url.searchParams.get("apiPath") || url.pathname;
 
-  if (req.method === "GET" && url.pathname === "/api/state") {
+  if (req.method === "GET" && pathname === "/api/state") {
     sendJson(res, 200, publicState(await readDb()));
     return;
   }
 
-  if (req.method === "POST" && url.pathname === "/api/login") {
+  if (req.method === "POST" && pathname === "/api/login") {
     const body = await readBody(req);
     const db = await readDb();
     const settings = getSettings(db);
@@ -282,7 +283,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "POST" && url.pathname === "/api/register") {
+  if (req.method === "POST" && pathname === "/api/register") {
     const body = await readBody(req);
     const db = await readDb();
     const settings = getSettings(db);
@@ -331,7 +332,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "PUT" && url.pathname === "/api/admin/settings") {
+  if (req.method === "PUT" && pathname === "/api/admin/settings") {
     const body = await readBody(req);
     const db = await readDb();
     const userId = String(body.currentUserId || "");
@@ -353,7 +354,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "POST" && url.pathname === "/api/admin/delete-member") {
+  if (req.method === "POST" && pathname === "/api/admin/delete-member") {
     const body = await readBody(req);
     const db = await readDb();
     const userId = String(body.currentUserId || "");
@@ -381,7 +382,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "POST" && url.pathname === "/api/admin/delete-record") {
+  if (req.method === "POST" && pathname === "/api/admin/delete-record") {
     const body = await readBody(req);
     const db = await readDb();
     const userId = String(body.currentUserId || "");
@@ -404,7 +405,7 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "PUT" && url.pathname === "/api/state") {
+  if (req.method === "PUT" && pathname === "/api/state") {
     const body = await readBody(req);
     const db = await readDb();
     const userId = String(body.currentUserId || "");

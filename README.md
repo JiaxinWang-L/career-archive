@@ -6,18 +6,21 @@
 
 ```text
 前端页面：CloudBase 静态网站托管
-后端接口：CloudBase 云函数 api
+后端接口：CloudBase 云托管 career-api
 数据存储：CloudBase 文档型数据库 app_state
 代码托管：GitHub
-```
-
-
 ```
 
 前端访问地址：
 
 ```text
-https://career-archive-d6g3v2mm182ce6b11-1394551417.tcloudbaseapp.com/career-archive/index.html
+https://career-archive-d6g3v2mm182ce6b11-1394551417.tcloudbaseapp.com/
+```
+
+后端访问地址：
+
+```text
+https://career-api-259446-8-1394551417.sh.run.tcloudbase.com/
 ```
 
 ## 主要功能
@@ -27,6 +30,8 @@ https://career-archive-d6g3v2mm182ce6b11-1394551417.tcloudbaseapp.com/career-arc
 - 管理员后台
 - 修改邀请码、开放名额、注册开关
 - 查看成员列表
+- 删除成员
+- 删除记录
 - 公司求职记录
 - 面试轮次
 - 面试问题
@@ -39,6 +44,25 @@ https://career-archive-d6g3v2mm182ce6b11-1394551417.tcloudbaseapp.com/career-arc
 
 ## 数据在哪里
 
+线上数据存放在 CloudBase 文档型数据库里：
+
+```text
+环境 ID：career-archive-d6g3v2mm182ce6b11
+数据库：文档型数据库
+集合：app_state
+文档 ID：career-archive
+主要字段：data
+```
+
+`data` 里面保存：
+
+```text
+settings：邀请码、成员名额、是否开放注册
+users：管理员和成员账号
+records：公司记录、面试轮次、问题、复盘和图片信息
+```
+
+GitHub 只保存代码，不保存线上用户数据。
 
 ## 日常修改流程
 
@@ -49,7 +73,7 @@ https://career-archive-d6g3v2mm182ce6b11-1394551417.tcloudbaseapp.com/career-arc
 3. 在左下角 Summary 填写本次修改说明。
 4. 点击 `Commit to main`。
 5. 点击 `Push origin`。
-6. CloudBase 从 GitHub 重新部署前端或云函数。
+6. CloudBase 从 GitHub 自动重新部署前端或云托管后端。
 
 常见修改范围：
 
@@ -61,6 +85,9 @@ app.js
 config.js
 
 改登录、注册、后台接口、数据保存逻辑：
+backend/server.js
+
+保留旧云函数备份：
 cloudfunctions/api/index.js
 ```
 
@@ -90,18 +117,24 @@ cloudfunctions/api/index.js
 
 ```js
 window.CAREER_ARCHIVE_CONFIG = {
-  apiBase: "https://career-archive-d6g3v2mm182ce6b11-1394551417.ap-shanghai.app.tcloudbase.com",
+  apiBase: "https://career-api-259446-8-1394551417.sh.run.tcloudbase.com",
 };
 ```
 
 注意引号必须是英文直引号 `" "`，不能是中文弯引号 `“ ”`。
 
+如果要直接验证后端数据接口，打开：
 
+```text
+https://career-api-259446-8-1394551417.sh.run.tcloudbase.com/?apiPath=%2Fapi%2Fstate
+```
+
+能看到包含 `users`、`records`、`settings` 的 JSON，就说明后端和数据库连接正常。
 
 ## 后续建议
 
 - 把图片从数据库 JSON 迁移到 CloudBase 云存储。
 - 把用户密码改成更安全的登录方案。
-- 增加成员禁用、删除、重置密码功能。
+- 增加成员禁用、重置密码功能。
 - 增加导出 Excel / PDF。
 - 增加按公司、岗位、问题类型的统计分析。

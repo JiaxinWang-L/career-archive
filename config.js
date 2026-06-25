@@ -1,3 +1,3 @@
 window.CAREER_ARCHIVE_CONFIG = {
-  apiBase: "https://career-archive-d6g3v2mm182ce6b11-1394551417.ap-shanghai.app.tcloudbase.com",
+  apiBase: "https://career-api-259446-8-1394551417.sh.run.tcloudbase.com",
 };
