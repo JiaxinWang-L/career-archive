@@ -85,11 +85,17 @@ function publicState(data) {
 }
 
 function errorInfo(error) {
-  return {
+  const info = {
     error: error.message || "服务器内部错误。",
     name: error.name,
     code: error.code,
   };
+
+  if (error.code === "SIGN_PARAM_INVALID" || String(error.message || "").includes("secret id error")) {
+    info.hint = "SecretId/SecretKey 无效。请确认云托管环境变量的 key 是 TENCENTCLOUD_SECRETID / TENCENTCLOUD_SECRETKEY，value 只填密钥本身，不要包含变量名、等号、引号或星号。";
+  }
+
+  return info;
 }
 
 function envValue(...names) {
@@ -116,10 +122,18 @@ function getCredentialConfig() {
 }
 
 function credentialDebugInfo() {
+  const secretId = envValue("TENCENTCLOUD_SECRETID", "TENCENTCLOUD_SECRET_ID", "TCB_SECRET_ID", "SECRET_ID");
+  const secretKey = envValue("TENCENTCLOUD_SECRETKEY", "TENCENTCLOUD_SECRET_KEY", "TCB_SECRET_KEY", "SECRET_KEY");
+  const sessionToken = envValue("TENCENTCLOUD_SESSIONTOKEN", "TENCENTCLOUD_SESSION_TOKEN", "TCB_SESSION_TOKEN");
+
   return {
-    hasSecretId: Boolean(envValue("TENCENTCLOUD_SECRETID", "TENCENTCLOUD_SECRET_ID", "TCB_SECRET_ID", "SECRET_ID")),
-    hasSecretKey: Boolean(envValue("TENCENTCLOUD_SECRETKEY", "TENCENTCLOUD_SECRET_KEY", "TCB_SECRET_KEY", "SECRET_KEY")),
-    hasSessionToken: Boolean(envValue("TENCENTCLOUD_SESSIONTOKEN", "TENCENTCLOUD_SESSION_TOKEN", "TCB_SESSION_TOKEN")),
+    hasSecretId: Boolean(secretId),
+    hasSecretKey: Boolean(secretKey),
+    hasSessionToken: Boolean(sessionToken),
+    secretIdLength: secretId.length,
+    secretKeyLength: secretKey.length,
+    secretIdLooksLikeTencentKey: secretId.startsWith("AKID"),
+    secretValueContainsEquals: secretId.includes("=") || secretKey.includes("="),
   };
 }
 
