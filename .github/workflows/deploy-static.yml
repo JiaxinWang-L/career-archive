@@ -30,11 +30,13 @@ jobs:
           mkdir public-dist
           cp index.html styles.css app.js config.js public-dist/
 
-      - name: Deploy to CloudBase static hosting
+      - name: Login to CloudBase CLI
         env:
           TENCENTCLOUD_SECRETID: ${{ secrets.TENCENTCLOUD_SECRETID }}
           TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENTCLOUD_SECRETKEY }}
-          SECRET_ID: ${{ secrets.TENCENTCLOUD_SECRETID }}
-          SECRET_KEY: ${{ secrets.TENCENTCLOUD_SECRETKEY }}
+        run: |
+          npx --yes -p @cloudbase/cli@latest tcb login --apiKeyId "$TENCENTCLOUD_SECRETID" --apiKey "$TENCENTCLOUD_SECRETKEY"
+
+      - name: Deploy to CloudBase static hosting
         run: |
           npx --yes -p @cloudbase/cli@latest tcb hosting deploy ./public-dist / -e career-archive-d6g3v2mm182ce6b11
