@@ -1,6 +1,5 @@
 const http = require("node:http");
 const crypto = require("node:crypto");
-const cloudbase = require("@cloudbase/node-sdk");
 
 const PORT = Number(process.env.PORT || 3000);
 const INVITE_CODE = process.env.INVITE_CODE || "CAREER2026";
@@ -9,12 +8,7 @@ const APP_STATE_ID = process.env.APP_STATE_ID || "career-archive";
 const COLLECTION = process.env.APP_STATE_COLLECTION || "app_state";
 const ENV_ID = process.env.TCB_ENV || process.env.SCF_NAMESPACE || "career-archive-d6g3v2mm182ce6b11";
 
-const app = cloudbase.init({
-  env: ENV_ID,
-});
-
-const db = app.database();
-const appState = db.collection(COLLECTION);
+let appState;
 
 const seedDb = {
   settings: {
@@ -81,13 +75,33 @@ function publicState(data) {
   };
 }
 
+function errorInfo(error) {
+  return {
+    error: error.message || "服务器内部错误。",
+    name: error.name,
+    code: error.code,
+  };
+}
+
+function getAppState() {
+  if (!appState) {
+    const cloudbase = require("@cloudbase/node-sdk");
+    const app = cloudbase.init({ env: ENV_ID });
+    const db = app.database();
+    appState = db.collection(COLLECTION);
+  }
+
+  return appState;
+}
+
 async function readData() {
-  const result = await appState.doc(APP_STATE_ID).get();
+  const collection = getAppState();
+  const result = await collection.doc(APP_STATE_ID).get();
   const doc = result.data?.[0];
 
   if (doc?.data) return normalizeData(doc.data);
 
-  await appState.doc(APP_STATE_ID).set({
+  await collection.doc(APP_STATE_ID).set({
     data: {
       data: seedDb,
       updatedAt: new Date(),
@@ -98,7 +112,8 @@ async function readData() {
 }
 
 async function writeData(data) {
-  await appState.doc(APP_STATE_ID).set({
+  const collection = getAppState();
+  await collection.doc(APP_STATE_ID).set({
     data: {
       data,
       updatedAt: new Date(),
@@ -114,6 +129,15 @@ function send(res, statusCode, data) {
     "access-control-allow-headers": "content-type,authorization",
   });
   res.end(JSON.stringify(data));
+}
+
+function sendEmpty(res, statusCode) {
+  res.writeHead(statusCode, {
+    "access-control-allow-origin": "*",
+    "access-control-allow-methods": "GET,POST,PUT,OPTIONS,HEAD",
+    "access-control-allow-headers": "content-type,authorization",
+  });
+  res.end();
 }
 
 function readBody(req) {
@@ -157,8 +181,49 @@ async function handleApi(req, res) {
     return;
   }
 
-  if (req.method === "GET" && (path === "/" || path === "/health" || path === "/api/health")) {
+  if ((req.method === "GET" || req.method === "HEAD") && (path === "/" || path === "/health" || path === "/api/health")) {
+    if (req.method === "HEAD") {
+      sendEmpty(res, 200);
+      return;
+    }
+
     send(res, 200, { ok: true, service: "career-archive-backend" });
+    return;
+  }
+
+  if (req.method === "GET" && (path === "/debug" || path === "/api/debug")) {
+    send(res, 200, {
+      ok: true,
+      service: "career-archive-backend",
+      path,
+      envId: ENV_ID,
+      collection: COLLECTION,
+      appStateId: APP_STATE_ID,
+      nodeEnv: process.env.NODE_ENV || "",
+      port: PORT,
+      hasTcbEnv: Boolean(process.env.TCB_ENV),
+      hasScfNamespace: Boolean(process.env.SCF_NAMESPACE),
+    });
+    return;
+  }
+
+  if (req.method === "GET" && (path === "/db-check" || path === "/api/db-check")) {
+    try {
+      const data = await readData();
+      send(res, 200, {
+        ok: true,
+        users: data.users.length,
+        records: data.records.length,
+        hasSettings: Boolean(data.settings),
+      });
+    } catch (error) {
+      console.error("database check failed", error);
+      send(res, 500, {
+        ok: false,
+        stage: "database",
+        ...errorInfo(error),
+      });
+    }
     return;
   }
 
@@ -320,12 +385,31 @@ async function handleApi(req, res) {
   send(res, 404, { error: "接口不存在。" });
 }
 
-const server = http.createServer((req, res) => {
-  handleApi(req, res).catch((error) => {
-    send(res, 500, { error: error.message || "服务器内部错误。" });
+function createServer() {
+  return http.createServer((req, res) => {
+    handleApi(req, res).catch((error) => {
+      console.error("request failed", error);
+      send(res, 500, {
+        ok: false,
+        stage: "request",
+        ...errorInfo(error),
+      });
+    });
   });
-});
+}
 
-server.listen(PORT, "0.0.0.0", () => {
-  console.log(`career archive backend listening on ${PORT}`);
-});
+function listen(port) {
+  const server = createServer();
+  server.on("error", (error) => {
+    console.error(`failed to listen on ${port}`, error.message);
+  });
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`career archive backend listening on ${port}, env=${ENV_ID}, collection=${COLLECTION}`);
+  });
+}
+
+listen(PORT);
+
+if (process.env.NODE_ENV === "production" && !process.env.PORT && PORT !== 80) {
+  listen(80);
+}

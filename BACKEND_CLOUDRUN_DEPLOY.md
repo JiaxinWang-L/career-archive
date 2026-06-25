@@ -40,10 +40,11 @@ main
 端口：3000
 ```
 
-如果控制台要求 Dockerfile，路径使用：
+如果控制台要求 Dockerfile，按你的“服务目录”填写：
 
 ```text
-backend/Dockerfile
+服务目录已经填 backend：Dockerfile
+服务目录留空或填仓库根目录：backend/Dockerfile
 ```
 
 ## 2. 环境变量
@@ -87,6 +88,25 @@ https://你的云托管域名/?apiPath=%2Fapi%2Fstate
 ```
 
 应该返回包含 `users`、`records`、`settings` 的 JSON。
+
+### 如果看到 502 或 503
+
+502 / 503 通常表示云托管容器没有正常对外服务，不是前端代码问题。优先检查：
+
+```text
+服务目录：backend
+Dockerfile：Dockerfile
+服务端口：3000
+启动命令：npm start
+```
+
+然后进入云托管服务的日志，搜索这一行：
+
+```text
+career archive backend listening
+```
+
+能看到这行，说明 Node 服务已经启动；如果看不到，说明容器没有正常启动，需要先看部署日志里的报错。
 
 ## 4. 切换前端
 
