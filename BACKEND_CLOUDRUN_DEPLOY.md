@@ -37,7 +37,7 @@ main
 运行环境：Node.js 18
 安装命令：npm install
 启动命令：npm start
-端口：3000
+端口：80 或 3000
 ```
 
 如果控制台要求 Dockerfile，按你的“服务目录”填写：
@@ -96,7 +96,7 @@ https://你的云托管域名/?apiPath=%2Fapi%2Fstate
 ```text
 服务目录：backend
 Dockerfile：Dockerfile
-服务端口：3000
+服务端口：80 或 3000
 启动命令：npm start
 ```
 
@@ -107,6 +107,8 @@ career archive backend listening
 ```
 
 能看到这行，说明 Node 服务已经启动；如果看不到，说明容器没有正常启动，需要先看部署日志里的报错。
+
+当前后端在生产环境会同时监听 80 和 3000，所以控制台端口填 80 或 3000 都可以。若仍然 502，优先看日志里是否出现 `career archive backend listening on 80` 或 `career archive backend listening on 3000`。
 
 ## 4. 切换前端
 

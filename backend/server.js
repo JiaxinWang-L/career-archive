@@ -408,8 +408,8 @@ function listen(port) {
   });
 }
 
-listen(PORT);
+const ports = process.env.NODE_ENV === "production" ? new Set([PORT, 80, 3000]) : new Set([PORT]);
 
-if (process.env.NODE_ENV === "production" && !process.env.PORT && PORT !== 80) {
-  listen(80);
+for (const port of ports) {
+  listen(port);
 }
