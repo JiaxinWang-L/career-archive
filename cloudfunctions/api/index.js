@@ -251,6 +251,44 @@ exports.main = async (event) => {
       return response(200, publicState(data));
     }
 
+    if (method === "POST" && path === "/admin/delete-member") {
+      const data = await readData();
+      const userId = String(body.currentUserId || "");
+      const memberId = String(body.memberId || "");
+      const user = data.users.find((item) => item.id === userId);
+      const member = data.users.find((item) => item.id === memberId);
+
+      if (!user || user.role !== "admin") {
+        return response(403, { error: "只有管理员可以删除成员。" });
+      }
+      if (!member) return response(404, { error: "成员不存在。" });
+      if (member.role === "admin") return response(400, { error: "不能删除管理员账号。" });
+
+      data.users = data.users.filter((item) => item.id !== memberId);
+      data.records = data.records.filter((record) => record.ownerId !== memberId);
+      await writeData(data);
+
+      return response(200, publicState(data));
+    }
+
+    if (method === "POST" && path === "/admin/delete-record") {
+      const data = await readData();
+      const userId = String(body.currentUserId || "");
+      const recordId = String(body.recordId || "");
+      const user = data.users.find((item) => item.id === userId);
+      const record = data.records.find((item) => item.id === recordId);
+
+      if (!user || user.role !== "admin") {
+        return response(403, { error: "只有管理员可以删除记录。" });
+      }
+      if (!record) return response(404, { error: "记录不存在。" });
+
+      data.records = data.records.filter((item) => item.id !== recordId);
+      await writeData(data);
+
+      return response(200, publicState(data));
+    }
+
     if (method === "PUT" && path === "/state") {
       const data = await readData();
       const userId = String(body.currentUserId || "");

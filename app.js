@@ -416,6 +416,7 @@ function renderPrivacy() {
 function renderAdmin(user) {
   const settings = appSettings();
   const members = state.users.filter((item) => item.role === "member");
+  const allRecords = state.records;
 
   return `
     <header class="topbar">
@@ -463,11 +464,17 @@ function renderAdmin(user) {
                   .map(
                     (member) => `
                       <article class="record">
-                        <h3>${escapeHtml(member.name)}</h3>
-                        <div class="record-meta">
-                          <span class="chip">${escapeHtml(member.email)}</span>
-                          <span class="chip">成员</span>
-                          <span class="chip">注册时间：${escapeHtml((member.createdAt || "").slice(0, 10) || "未知")}</span>
+                        <div class="record-header">
+                          <div>
+                            <h3>${escapeHtml(member.name)}</h3>
+                            <div class="record-meta">
+                              <span class="chip">${escapeHtml(member.email)}</span>
+                              <span class="chip">成员</span>
+                              <span class="chip">记录：${state.records.filter((record) => record.ownerId === member.id).length}</span>
+                              <span class="chip">注册时间：${escapeHtml((member.createdAt || "").slice(0, 10) || "未知")}</span>
+                            </div>
+                          </div>
+                          <button class="danger-button" type="button" data-admin-delete-member="${member.id}">删除成员</button>
                         </div>
                       </article>
                     `,
@@ -475,6 +482,37 @@ function renderAdmin(user) {
                   .join("")}
               </div>`
             : `<div class="empty"><strong>还没有成员</strong><p>成员用邀请码注册后，会出现在这里。</p></div>`
+        }
+      </section>
+      <section class="panel">
+        <div class="panel-head">
+          <h3>记录管理</h3>
+        </div>
+        ${
+          allRecords.length
+            ? `<div class="record-list">
+                ${allRecords
+                  .map((record) => {
+                    const owner = state.users.find((item) => item.id === record.ownerId);
+                    return `
+                      <article class="record">
+                        <div class="record-header">
+                          <div>
+                            <h3>${escapeHtml(record.company)}</h3>
+                            <div class="record-meta">
+                              <span class="chip">${escapeHtml(record.position || "未填写岗位")}</span>
+                              <span class="chip ${record.visibility === "shared" ? "shared" : "private"}">${record.visibility === "shared" ? "小圈子可见" : "仅自己可见"}</span>
+                              <span class="chip">作者：${escapeHtml(owner?.name || "未知成员")}</span>
+                            </div>
+                          </div>
+                          <button class="danger-button" type="button" data-admin-delete-record="${record.id}">删除记录</button>
+                        </div>
+                      </article>
+                    `;
+                  })
+                  .join("")}
+              </div>`
+            : `<div class="empty"><strong>还没有记录</strong><p>成员创建记录后，会出现在这里。</p></div>`
         }
       </section>
     </div>
@@ -720,6 +758,14 @@ function bindEvents() {
 
   document.getElementById("adminSettingsForm")?.addEventListener("submit", handleAdminSettings);
 
+  document.querySelectorAll("[data-admin-delete-member]").forEach((button) => {
+    button.addEventListener("click", () => handleAdminDeleteMember(button.dataset.adminDeleteMember));
+  });
+
+  document.querySelectorAll("[data-admin-delete-record]").forEach((button) => {
+    button.addEventListener("click", () => handleAdminDeleteRecord(button.dataset.adminDeleteRecord));
+  });
+
   document.querySelectorAll("[data-delete-image]").forEach((button) => {
     button.addEventListener("click", () => deleteImage(button.dataset.deleteImage));
   });
@@ -759,6 +805,49 @@ async function handleAdminSettings(event) {
     if (message) {
       message.innerHTML = `<div class="message error" style="margin-top: 12px;">${escapeHtml(error.message)}</div>`;
     }
+  }
+}
+
+async function handleAdminDeleteMember(memberId) {
+  const member = state.users.find((item) => item.id === memberId);
+  const recordCount = state.records.filter((record) => record.ownerId === memberId).length;
+  const ok = confirm(
+    `确定删除成员「${member?.name || member?.email || "未知成员"}」吗？这会同时删除该成员名下 ${recordCount} 条记录。`,
+  );
+
+  if (!ok) return;
+
+  await adminPost("/api/admin/delete-member", { memberId });
+}
+
+async function handleAdminDeleteRecord(recordId) {
+  const record = state.records.find((item) => item.id === recordId);
+  const ok = confirm(`确定删除记录「${record?.company || "未知记录"}」吗？此操作不可撤回。`);
+
+  if (!ok) return;
+
+  await adminPost("/api/admin/delete-record", { recordId });
+}
+
+async function adminPost(path, payload) {
+  try {
+    const response = await fetch(apiUrl(path), {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        currentUserId: state.currentUserId,
+        ...payload,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || "操作失败。");
+
+    state.users = data.users;
+    state.records = data.records;
+    state.settings = data.settings || state.settings;
+    render();
+  } catch (error) {
+    alert(error.message);
   }
 }
 

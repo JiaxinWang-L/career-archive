@@ -285,6 +285,7 @@ async function handleApi(req, res) {
   if (req.method === "POST" && url.pathname === "/api/register") {
     const body = await readBody(req);
     const db = await readDb();
+    const settings = getSettings(db);
     const email = String(body.email || "").trim().toLowerCase();
     const name = String(body.name || "").trim();
     const password = String(body.password || "");
@@ -347,6 +348,57 @@ async function handleApi(req, res) {
       allowRegistration: Boolean(body.settings?.allowRegistration),
     };
 
+    await writeDb(db);
+    sendJson(res, 200, publicState(db));
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/admin/delete-member") {
+    const body = await readBody(req);
+    const db = await readDb();
+    const userId = String(body.currentUserId || "");
+    const memberId = String(body.memberId || "");
+    const user = db.users.find((item) => item.id === userId);
+    const member = db.users.find((item) => item.id === memberId);
+
+    if (!user || user.role !== "admin") {
+      sendJson(res, 403, { error: "只有管理员可以删除成员。" });
+      return;
+    }
+    if (!member) {
+      sendJson(res, 404, { error: "成员不存在。" });
+      return;
+    }
+    if (member.role === "admin") {
+      sendJson(res, 400, { error: "不能删除管理员账号。" });
+      return;
+    }
+
+    db.users = db.users.filter((item) => item.id !== memberId);
+    db.records = db.records.filter((record) => record.ownerId !== memberId);
+    await writeDb(db);
+    sendJson(res, 200, publicState(db));
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/admin/delete-record") {
+    const body = await readBody(req);
+    const db = await readDb();
+    const userId = String(body.currentUserId || "");
+    const recordId = String(body.recordId || "");
+    const user = db.users.find((item) => item.id === userId);
+    const record = db.records.find((item) => item.id === recordId);
+
+    if (!user || user.role !== "admin") {
+      sendJson(res, 403, { error: "只有管理员可以删除记录。" });
+      return;
+    }
+    if (!record) {
+      sendJson(res, 404, { error: "记录不存在。" });
+      return;
+    }
+
+    db.records = db.records.filter((item) => item.id !== recordId);
     await writeDb(db);
     sendJson(res, 200, publicState(db));
     return;
