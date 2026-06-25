@@ -33,10 +33,17 @@ main
 ```text
 服务名称：career-api
 服务目录：backend
+部署方式：Dockerfile / 容器镜像构建
 运行环境：Node.js 18
 安装命令：npm install
 启动命令：npm start
 端口：3000
+```
+
+如果控制台要求 Dockerfile，路径使用：
+
+```text
+backend/Dockerfile
 ```
 
 ## 2. 环境变量
