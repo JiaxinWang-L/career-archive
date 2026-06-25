@@ -75,6 +75,44 @@ GitHub 只保存代码，不保存线上用户数据。
 5. 点击 `Push origin`。
 6. CloudBase 从 GitHub 自动重新部署前端或云托管后端。
 
+## GitHub 自动部署前端
+
+仓库里已经配置了 GitHub Actions：
+
+```text
+.github/workflows/deploy-static.yml
+```
+
+以后只要推送这些前端文件，GitHub 会自动部署到 CloudBase 静态网站托管：
+
+```text
+index.html
+styles.css
+app.js
+config.js
+```
+
+第一次使用前，需要在 GitHub 仓库里添加两个 Secrets：
+
+```text
+TENCENTCLOUD_SECRETID
+TENCENTCLOUD_SECRETKEY
+```
+
+入口：
+
+```text
+GitHub 仓库 → Settings → Secrets and variables → Actions → New repository secret
+```
+
+这两个值只放在 GitHub Secrets 和 CloudBase 环境变量里，不要写进代码。
+
+推送后可以在这里看部署结果：
+
+```text
+GitHub 仓库 → Actions → Deploy Static Site
+```
+
 常见修改范围：
 
 ```text

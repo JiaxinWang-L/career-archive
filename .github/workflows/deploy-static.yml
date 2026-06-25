@@ -1,0 +1,38 @@
+name: Deploy Static Site
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - index.html
+      - styles.css
+      - app.js
+      - config.js
+      - .github/workflows/deploy-static.yml
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Prepare static files
+        run: |
+          mkdir public-dist
+          cp index.html styles.css app.js config.js public-dist/
+
+      - name: Deploy to CloudBase static hosting
+        env:
+          TENCENTCLOUD_SECRETID: ${{ secrets.TENCENTCLOUD_SECRETID }}
+          TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENTCLOUD_SECRETKEY }}
+        run: |
+          npx --yes @cloudbase/cli@latest hosting deploy ./public-dist -e career-archive-d6g3v2mm182ce6b11
