@@ -15,6 +15,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 8
 
     steps:
       - name: Checkout
@@ -49,6 +50,7 @@ jobs:
           fi
 
       - name: Login to CloudBase CLI
+        timeout-minutes: 2
         env:
           TENCENTCLOUD_SECRETID: ${{ secrets.TENCENTCLOUD_SECRETID || secrets.TENCENTCLOUD_SECRET_ID || secrets.SECRET_ID }}
           TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENTCLOUD_SECRETKEY || secrets.TENCENTCLOUD_SECRET_KEY || secrets.SECRET_KEY }}
@@ -56,5 +58,6 @@ jobs:
           npx --yes -p @cloudbase/cli@latest tcb login --apiKeyId "$TENCENTCLOUD_SECRETID" --apiKey "$TENCENTCLOUD_SECRETKEY"
 
       - name: Deploy to CloudBase static hosting
+        timeout-minutes: 5
         run: |
           npx --yes -p @cloudbase/cli@latest tcb hosting deploy ./public-dist / -e career-archive-d6g3v2mm182ce6b11
