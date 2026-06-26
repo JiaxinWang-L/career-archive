@@ -30,10 +30,28 @@ jobs:
           mkdir public-dist
           cp index.html styles.css app.js config.js public-dist/
 
+      - name: Validate CloudBase secrets
+        env:
+          TENCENTCLOUD_SECRETID: ${{ secrets.TENCENTCLOUD_SECRETID || secrets.TENCENTCLOUD_SECRET_ID || secrets.SECRET_ID }}
+          TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENTCLOUD_SECRETKEY || secrets.TENCENTCLOUD_SECRET_KEY || secrets.SECRET_KEY }}
+        run: |
+          if [ -z "$TENCENTCLOUD_SECRETID" ] || [ -z "$TENCENTCLOUD_SECRETKEY" ]; then
+            echo "::error::Missing GitHub Secrets. Add TENCENTCLOUD_SECRETID and TENCENTCLOUD_SECRETKEY in Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+          if [[ "$TENCENTCLOUD_SECRETID" != AKID* ]]; then
+            echo "::error::TENCENTCLOUD_SECRETID should usually start with AKID. Check that you did not use APPID, CloudBase env id, or another value."
+            exit 1
+          fi
+          if [[ "$TENCENTCLOUD_SECRETID" == *"="* || "$TENCENTCLOUD_SECRETKEY" == *"="* ]]; then
+            echo "::error::Secret values should only contain the credential value, not KEY=value or quotes."
+            exit 1
+          fi
+
       - name: Login to CloudBase CLI
         env:
-          TENCENTCLOUD_SECRETID: ${{ secrets.TENCENTCLOUD_SECRETID }}
-          TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENTCLOUD_SECRETKEY }}
+          TENCENTCLOUD_SECRETID: ${{ secrets.TENCENTCLOUD_SECRETID || secrets.TENCENTCLOUD_SECRET_ID || secrets.SECRET_ID }}
+          TENCENTCLOUD_SECRETKEY: ${{ secrets.TENCENTCLOUD_SECRETKEY || secrets.TENCENTCLOUD_SECRET_KEY || secrets.SECRET_KEY }}
         run: |
           npx --yes -p @cloudbase/cli@latest tcb login --apiKeyId "$TENCENTCLOUD_SECRETID" --apiKey "$TENCENTCLOUD_SECRETKEY"
 
