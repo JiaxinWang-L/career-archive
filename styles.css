@@ -271,12 +271,24 @@ button {
   margin-top: 10px;
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
 .chip {
   border-radius: 999px;
   background: #eef2f7;
   color: #344054;
   padding: 5px 9px;
   font-size: 12px;
+}
+
+.chip.compact {
+  padding: 3px 7px;
+  font-size: 11px;
 }
 
 .chip.shared {
@@ -293,6 +305,10 @@ button {
   color: var(--muted);
   line-height: 1.6;
   margin: 10px 0 0;
+}
+
+.detail-meta {
+  margin-top: 8px;
 }
 
 .detail {
@@ -507,6 +523,28 @@ textarea:focus {
   background: transparent;
   cursor: zoom-in;
   display: block;
+}
+
+.file-preview-card {
+  height: 108px;
+  border: 1px solid var(--line);
+  background: #f8fafc;
+  color: var(--text);
+  display: grid;
+  place-items: center;
+  gap: 4px;
+  text-align: center;
+  text-decoration: none;
+  padding: 12px;
+}
+
+.file-preview-card strong {
+  font-size: 20px;
+}
+
+.file-preview-card span {
+  color: var(--muted);
+  font-size: 12px;
 }
 
 .image-tile img {

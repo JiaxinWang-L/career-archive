@@ -143,7 +143,7 @@ function renderAuth() {
           </div>
           <ul>
             <li>默认私密，只有主动共享的记录会进入经验数据库。</li>
-            <li>图片默认不共享，避免泄露手机号、微信、邮箱和面试链接。</li>
+            <li>附件默认不共享，避免泄露手机号、微信、邮箱和面试链接。</li>
             <li>第一版用于验证记录、复盘、共享和隐私流程。</li>
           </ul>
         </div>
@@ -273,13 +273,13 @@ function renderDashboard(user) {
           <h3>当前隐私策略</h3>
         </div>
         <div class="notice">
-          新增内容默认仅自己可见。记录设为“小圈子可见”后，登录成员才能在经验数据库看到文字内容；图片仍需单独打开共享。
+          新增内容默认仅自己可见。记录设为“小圈子可见”后，登录成员才能在经验数据库看到文字内容；附件仍需单独打开共享。
         </div>
         <div class="chips">
           <span class="chip private">默认私密</span>
           <span class="chip shared">主动共享</span>
           <span class="chip">随时撤回</span>
-          <span class="chip">图片单独授权</span>
+          <span class="chip">附件单独授权</span>
         </div>
       </section>
     </div>
@@ -342,6 +342,7 @@ function renderLibrary(user) {
       <section class="panel">
         ${renderSelectedRecord(user, shared, {
           editable: false,
+          showOwner: true,
           emptyTitle: "选择一条经验",
           emptyText: "点击左侧共享记录后，这里会显示完整面试问题和复盘。",
         })}
@@ -359,18 +360,18 @@ function renderPrivacy() {
       </div>
     </header>
     <section class="panel detail">
-      <div class="notice">核心原则：默认私密，主动共享，图片单独授权，随时撤回。</div>
+      <div class="notice">核心原则：默认私密，主动共享，附件单独授权，随时撤回。</div>
       <div class="round">
         <h4>1. 默认仅自己可见</h4>
-        <p>用户新增公司、面试轮次、问题和图片时，其他成员默认看不到。</p>
+        <p>用户新增公司、面试轮次、问题和附件时，其他成员默认看不到。</p>
       </div>
       <div class="round">
         <h4>2. 共享只展示文字记录</h4>
         <p>公司记录设为“小圈子可见”后，经验数据库会展示公司、岗位、面试问题、回答和复盘。</p>
       </div>
       <div class="round">
-        <h4>3. 图片需要单独共享</h4>
-        <p>图片可能包含手机号、邮箱、微信、HR 信息、会议链接或简历个人信息，所以必须单独打开共享。</p>
+        <h4>3. 附件需要单独共享</h4>
+        <p>附件可能包含手机号、邮箱、微信、HR 信息、会议链接或简历个人信息，所以必须单独打开共享。</p>
       </div>
       <div class="round">
         <h4>4. 用户可以随时撤回</h4>
@@ -525,7 +526,7 @@ function renderRecordCard(record, user, libraryMode) {
             <span class="chip">${escapeHtml(record.position)}</span>
             <span class="chip">${escapeHtml(record.status)}</span>
             <span class="chip ${record.visibility === "shared" ? "shared" : "private"}">${record.visibility === "shared" ? "小圈子可见" : "仅自己可见"}</span>
-            ${record.shareImages ? `<span class="chip shared">图片已共享</span>` : `<span class="chip private">图片未共享</span>`}
+            ${record.shareImages ? `<span class="chip shared">附件已共享</span>` : `<span class="chip private">附件未共享</span>`}
           </div>
         </div>
         <button class="secondary-button" type="button" data-select-record="${record.id}">查看</button>
@@ -553,12 +554,26 @@ function renderSelectedRecord(user, records = ownRecords(user), options = {}) {
 
   state.selectedRecordId = record.id;
   const editable = options.editable === false ? false : canEditRecord(record, user);
+  const owner = state.users.find((item) => item.id === record.ownerId);
+  const questionCount = record.rounds.reduce((sum, round) => sum + round.questions.length, 0);
 
   return `
     <div class="panel-head">
       <div>
-        <h3>${escapeHtml(record.company)}</h3>
-        <p class="hint">${escapeHtml(record.position)} · ${escapeHtml(record.status)}</p>
+        <div class="title-row">
+          <h3>${escapeHtml(record.company)}</h3>
+          <span class="chip compact ${record.visibility === "shared" ? "shared" : "private"}">${record.visibility === "shared" ? "小圈子可见" : "仅自己可见"}</span>
+          <span class="chip compact ${record.shareImages ? "shared" : "private"}">${record.shareImages ? "附件已共享" : "附件未共享"}</span>
+        </div>
+        <div class="record-meta detail-meta">
+          <span class="chip">岗位：${escapeHtml(record.position || "未填写")}</span>
+          <span class="chip">状态：${escapeHtml(record.status || "未填写")}</span>
+          <span class="chip">渠道：${escapeHtml(record.channel || "未填写")}</span>
+          <span class="chip">投递：${escapeHtml(record.appliedAt || "未填写")}</span>
+          <span class="chip">轮次：${record.rounds.length}</span>
+          <span class="chip">问题：${questionCount}</span>
+          ${options.showOwner ? `<span class="chip">作者：${escapeHtml(owner?.name || "成员")}</span>` : ""}
+        </div>
       </div>
       ${
         editable
@@ -570,10 +585,6 @@ function renderSelectedRecord(user, records = ownRecords(user), options = {}) {
           `
           : ""
       }
-    </div>
-    <div class="notice">
-      ${record.visibility === "shared" ? "这条记录已共享给小圈子。" : "这条记录仅你自己可见。"}
-      ${record.shareImages ? "图片也已共享，请确认已打码敏感信息。" : "图片未共享。"}
     </div>
     ${renderImages(record.images, record.shareImages || editable, editable, "record", record.id)}
     <div class="detail">
@@ -636,18 +647,44 @@ function renderQuestion(question, record, round, editable) {
   `;
 }
 
+function fileKind(file = {}) {
+  const type = file.type || "";
+  const name = (file.name || "").toLowerCase();
+
+  if (type.startsWith("image/") || file.data?.startsWith("data:image/")) return "image";
+  if (type === "application/pdf" || name.endsWith(".pdf")) return "pdf";
+  if (
+    type.includes("word") ||
+    type.includes("officedocument.wordprocessingml") ||
+    name.endsWith(".doc") ||
+    name.endsWith(".docx")
+  ) {
+    return "word";
+  }
+
+  return "file";
+}
+
+function fileBadge(file = {}) {
+  const kind = fileKind(file);
+  if (kind === "pdf") return "PDF";
+  if (kind === "word") return "Word";
+  if (kind === "image") return "图片";
+  return "附件";
+}
+
 function renderImages(images = [], visible, editable, scope, targetId) {
   if (!visible && images.length) {
-    return `<div class="notice">这部分图片未共享，仅作者本人可见。</div>`;
+    return `<div class="notice">这部分附件未共享，仅作者本人可见。</div>`;
   }
 
   return `
     ${
       editable
         ? `<div class="field full" style="margin-top: 12px;">
-            <label>添加图片附件</label>
-            <input type="file" accept="image/*" multiple data-image-upload="${scope}:${targetId}" />
-            <p class="hint">建议先给手机号、微信、邮箱、面试链接、HR 信息打码。</p>
+            <label>添加附件</label>
+            <input type="file" accept="image/*,.pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple data-image-upload="${scope}:${targetId}" />
+            <p class="hint">支持图片、PDF、Word。上传前建议先给手机号、微信、邮箱、面试链接、HR 信息打码。</p>
           </div>`
         : ""
     }
@@ -656,13 +693,22 @@ function renderImages(images = [], visible, editable, scope, targetId) {
         ? `<div class="image-grid">
             ${images
               .map(
-                (image) => `
+                (image) => {
+                  const kind = fileKind(image);
+                  return `
                   <div class="image-tile">
-                    <button class="image-preview-button" type="button" data-preview-image="${scope}:${targetId}:${image.id}" aria-label="预览图片 ${escapeHtml(image.name)}">
-                      <img src="${image.data}" alt="${escapeHtml(image.name)}" />
-                    </button>
+                    ${
+                      kind === "image"
+                        ? `<button class="image-preview-button" type="button" data-preview-image="${scope}:${targetId}:${image.id}" aria-label="预览图片 ${escapeHtml(image.name)}">
+                            <img src="${image.data}" alt="${escapeHtml(image.name)}" />
+                          </button>`
+                        : `<a class="file-preview-card" href="${image.data}" target="_blank" rel="noopener" download="${escapeHtml(image.name)}">
+                            <strong>${fileBadge(image)}</strong>
+                            <span>打开附件</span>
+                          </a>`
+                    }
                     <div>
-                      <small>${escapeHtml(image.name)}</small>
+                      <small>${escapeHtml(image.name)} · ${fileBadge(image)}</small>
                       ${
                         editable
                           ? `<button class="danger-button" type="button" data-delete-image="${scope}:${targetId}:${image.id}">删</button>`
@@ -670,7 +716,8 @@ function renderImages(images = [], visible, editable, scope, targetId) {
                       }
                     </div>
                   </div>
-                `,
+                `;
+                },
               )
               .join("")}
           </div>`
@@ -911,10 +958,10 @@ function openRecordModal(recordId = "") {
             </select>
           </div>
           <div class="field">
-            <label for="shareImages">图片共享</label>
+            <label for="shareImages">附件共享</label>
             <select id="shareImages" name="shareImages">
-              <option value="false" ${!record?.shareImages ? "selected" : ""}>图片不共享</option>
-              <option value="true" ${record?.shareImages ? "selected" : ""}>图片也共享</option>
+              <option value="false" ${!record?.shareImages ? "selected" : ""}>附件不共享</option>
+              <option value="true" ${record?.shareImages ? "selected" : ""}>附件也共享</option>
             </select>
           </div>
           <div class="field full">
@@ -1161,6 +1208,9 @@ function handleImageUpload(event, descriptor) {
             resolve({
               id: uid("img"),
               name: file.name,
+              type: file.type,
+              kind: fileKind(file),
+              size: file.size,
               data: reader.result,
               createdAt: new Date().toISOString(),
             });
