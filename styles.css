@@ -500,6 +500,15 @@ textarea:focus {
   overflow: hidden;
 }
 
+.image-preview-button {
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+  display: block;
+}
+
 .image-tile img {
   width: 100%;
   height: 108px;
@@ -520,6 +529,29 @@ textarea:focus {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.image-preview-backdrop {
+  cursor: zoom-out;
+}
+
+.image-preview-modal {
+  width: min(1100px, 96vw);
+  max-height: 92vh;
+  background: #fff;
+  border-radius: 8px;
+  padding: 14px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.28);
+  cursor: default;
+}
+
+.image-preview-modal img {
+  width: 100%;
+  max-height: calc(92vh - 82px);
+  object-fit: contain;
+  display: block;
+  border-radius: 8px;
+  background: #0f172a;
 }
 
 .empty {

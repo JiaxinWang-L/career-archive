@@ -291,6 +291,7 @@ function statCard(label, value) {
 }
 
 function renderMine(user) {
+  const own = ownRecords(user);
   return `
     <header class="topbar">
       <div>
@@ -304,10 +305,10 @@ function renderMine(user) {
         <div class="panel-head">
           <h3>公司记录</h3>
         </div>
-        ${renderRecordList(ownRecords(user), user)}
+        ${renderRecordList(own, user)}
       </section>
       <section class="panel">
-        ${renderSelectedRecord(user)}
+        ${renderSelectedRecord(user, own)}
       </section>
     </div>
   `;
@@ -334,9 +335,18 @@ function renderLibrary(user) {
         <option>失败</option>
       </select>
     </div>
-    <section class="panel">
-      ${renderRecordList(shared, user, true)}
-    </section>
+    <div class="grid main-grid">
+      <section class="panel">
+        ${renderRecordList(shared, user, true)}
+      </section>
+      <section class="panel">
+        ${renderSelectedRecord(user, shared, {
+          editable: false,
+          emptyTitle: "选择一条经验",
+          emptyText: "点击左侧共享记录后，这里会显示完整面试问题和复盘。",
+        })}
+      </section>
+    </div>
   `;
 }
 
@@ -532,17 +542,17 @@ function renderRecordCard(record, user, libraryMode) {
   `;
 }
 
-function renderSelectedRecord(user) {
+function renderSelectedRecord(user, records = ownRecords(user), options = {}) {
   const record =
-    state.records.find((item) => item.id === state.selectedRecordId && canViewRecord(item, user)) ||
-    ownRecords(user)[0];
+    records.find((item) => item.id === state.selectedRecordId) ||
+    records[0];
 
   if (!record) {
-    return `<div class="empty"><strong>选择一家公司</strong><p>新增记录后，这里会显示面试轮次和问题复盘。</p></div>`;
+    return `<div class="empty"><strong>${escapeHtml(options.emptyTitle || "选择一家公司")}</strong><p>${escapeHtml(options.emptyText || "新增记录后，这里会显示面试轮次和问题复盘。")}</p></div>`;
   }
 
   state.selectedRecordId = record.id;
-  const editable = canEditRecord(record, user);
+  const editable = options.editable === false ? false : canEditRecord(record, user);
 
   return `
     <div class="panel-head">
@@ -648,7 +658,9 @@ function renderImages(images = [], visible, editable, scope, targetId) {
               .map(
                 (image) => `
                   <div class="image-tile">
-                    <img src="${image.data}" alt="${escapeHtml(image.name)}" />
+                    <button class="image-preview-button" type="button" data-preview-image="${scope}:${targetId}:${image.id}" aria-label="预览图片 ${escapeHtml(image.name)}">
+                      <img src="${image.data}" alt="${escapeHtml(image.name)}" />
+                    </button>
                     <div>
                       <small>${escapeHtml(image.name)}</small>
                       ${
@@ -692,7 +704,9 @@ function bindEvents() {
   document.querySelectorAll("[data-select-record]").forEach((button) => {
     button.addEventListener("click", () => {
       state.selectedRecordId = button.dataset.selectRecord;
-      state.activeView = "mine";
+      if (state.activeView !== "library") {
+        state.activeView = "mine";
+      }
       render();
     });
   });
@@ -725,6 +739,10 @@ function bindEvents() {
 
   document.querySelectorAll("[data-delete-image]").forEach((button) => {
     button.addEventListener("click", () => deleteImage(button.dataset.deleteImage));
+  });
+
+  document.querySelectorAll("[data-preview-image]").forEach((button) => {
+    button.addEventListener("click", () => previewImage(button.dataset.previewImage));
   });
 
   document.getElementById("librarySearch")?.addEventListener("input", filterLibrary);
@@ -1084,6 +1102,49 @@ function field(name, label, value = "", placeholder = "", type = "text") {
 
 function closeModal() {
   document.getElementById("modalRoot").innerHTML = "";
+}
+
+function findImage(descriptor) {
+  const [scope, ...ids] = descriptor.split(":");
+
+  if (scope === "record") {
+    const [recordId, imageId] = ids;
+    const record = state.records.find((item) => item.id === recordId);
+    return record?.images.find((image) => image.id === imageId) || null;
+  }
+
+  if (scope === "question") {
+    const [recordId, roundId, questionId, imageId] = ids;
+    const record = state.records.find((item) => item.id === recordId);
+    const round = record?.rounds.find((item) => item.id === roundId);
+    const question = round?.questions.find((item) => item.id === questionId);
+    return question?.images.find((image) => image.id === imageId) || null;
+  }
+
+  return null;
+}
+
+function previewImage(descriptor) {
+  const image = findImage(descriptor);
+  if (!image) return;
+
+  document.getElementById("modalRoot").innerHTML = `
+    <div class="modal-backdrop image-preview-backdrop" data-close-modal>
+      <div class="image-preview-modal" role="dialog" aria-modal="true" aria-label="图片预览">
+        <div class="modal-head">
+          <h3>${escapeHtml(image.name || "图片预览")}</h3>
+          <button class="ghost-button" type="button" data-close-modal>关闭</button>
+        </div>
+        <img src="${image.data}" alt="${escapeHtml(image.name || "图片预览")}" />
+      </div>
+    </div>
+  `;
+
+  document.querySelectorAll("[data-close-modal]").forEach((button) => {
+    button.addEventListener("click", (event) => {
+      if (event.target === event.currentTarget || button.tagName === "BUTTON") closeModal();
+    });
+  });
 }
 
 function handleImageUpload(event, descriptor) {
